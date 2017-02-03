@@ -3,7 +3,7 @@
 #include <fcntl.h>  // open(), read()
 
 #include <sys/types.h>
-#include <sys/uio.h>  // one of these headers are bound to hold read() and open()
+#include <sys/uio.h>  // one of these libs are bound to hold read() and open()
 #include <unistd.h>   // for mac os
 #include <fcntl.h>
 
@@ -74,55 +74,53 @@ int* level1(int arcg, char **argv, int* count){
 }
 
 int* level2(int arcg, char **argv, int* count){
-
-  int fd = open(argv[2],O_RDONLY);
+  int fd = open("bar",O_RDONLY);
   if(fd < 0){
     perror("File not opened");
     exit(EXIT_FAILURE);
   }
-  char buffer;
+  char* buffer;
+
+  printf("Test\n");
 
   int i, j, offset, end;
-  // check for each substring submitted
   for(i = 3; i < arcg; i++){
     end = 0;
     for(offset = 0; !end; offset++){
-      // rewind file to beginging with offset
-      int ret = lseek(fd,offset, SEEK_SET);
-      if(ret < 0){
-        perror("Exit Failure");
-        exit(EXIT_FAILURE);
-      }
+      // int ret = lseek(fd,offset, SEEK_SET);
+      // if(ret < 0){
+      //   exit(EXIT_FAILURE);
+      // }
 
-      // search for substring
+      printf("Test2\n");
+
       for(j = 0; argv[i][j] != 0; j++){
-
-        int gotten = read(fd, &buffer, 1);
-        // check if file is at end
-        if(gotten == 0){
+        int gotten = read(fd, buffer, sizeof(char));
+        perror("reading");
+        printf("%s\n",buffer);
+        if(buffer == NULL){
           end = 1;
           break;
         }
-
-        if(gotten < 0){ // error checking
-          perror(argv[0]);
-          exit(EXIT_FAILURE);
-        }
-
-        // logic to see if substring is found
-        int bufferLetter = toLowerCase(buffer);
-        int subStringLetter = toLowerCase(argv[i][j]);
-        if(bufferLetter != subStringLetter){  // substring not found
+        if(gotten < 0){
+          printf("Uh Oh\n");
           break;
         }
-        // if at end of substring, increment counter
+        printf("Test3\n");
+
+        printf("%s\n",buffer);
+
+        int bufferLetter = toLowerCase(*buffer);
+        int subStringLetter = toLowerCase(argv[i][j]);
+        if(bufferLetter != subStringLetter){
+          break;
+          }
         else if(argv[i][j+1] == 0){
           count[i-3] += 1;
         }
       }
     }
   }
-  close(fd);
   return count;
 }
 
@@ -133,6 +131,8 @@ int main(int arcg, char **argv){
   int i;
   //if flag is enabled
   if(argv[1][0] == '-'){
+
+    printf("Entered Flag\n");
 
     // alloctate memory for array to store values of appearences for substring
     count = (int*)calloc(arcg-3, sizeof(int));

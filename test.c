@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 int main() {
 
@@ -14,7 +15,7 @@ int main() {
 
         fh = open("abc.txt",O_RDONLY);
         printf ("File handle %d\n",fh);
-        while (gotten = read(fh,buffer,64)) {
+        while ((gotten = read(fh,buffer,64))) {
                 buffer[gotten] = '\0';
                 printf("******%s",buffer);
                 }
