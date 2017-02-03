@@ -80,18 +80,36 @@ int* level2(int arcg, char **argv, int* count){
 
   printf("Test\n");
 
-  int i, j, z, offset;
+  int i, j, z, offset, end;
   for(i = 3; i < arcg; i++){
     j = 0;
     offset = 0;
-    for(offset = 0; argv[i][offset] != 0; offset++) {
-      fd = open(argv[1],O_RDONLY);  // will this work?
-      for(j = 0; argv[i][j] != 0; j++){
+    end = 0;
 
+    for(offset = 0;!end; offset++) {
+      int ret = lseek(fd,offset,SEEK_SET);
+      if(ret < 0){
+        exit(EXIT_FAILURE);
+      }
+
+      printf("Test1\n");
+
+      for(j = 0; argv[i][j] != 0 && !end; j++){
+        
+        printf("Test2\n");
         int gotten = read(fd, buffer, sizeof(char));
-        if(gotten < 0){
+        if(buffer == NULL){
+          end = 1;
           break;
         }
+        if(gotten < 0){
+          printf("Uh Oh\n");
+          break;
+        }
+        printf("Test3\n");
+
+        printf("%s\n",buffer);
+
         int bufferLetter = toLowerCase(*buffer);
         int subStringLetter = toLowerCase(argv[i][j]);
         if(bufferLetter != subStringLetter){
@@ -99,7 +117,6 @@ int* level2(int arcg, char **argv, int* count){
           }
         else if(argv[i][j+1] == 0){
           count[i-3] += 1;
-          break;
         }
       }
     }
