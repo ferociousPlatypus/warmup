@@ -122,6 +122,8 @@ int* level2(int arcg, char **argv, int* count){
       }
     }
   }
+
+  // close and return
   close(fd);
   return count;
 }
