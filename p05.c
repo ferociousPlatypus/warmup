@@ -17,8 +17,36 @@ int toLowerCase(int letter){
   return letter;
 }
 
+// inputs: argument count, start index of arguments, argument vector, count array,
+// buffer array
+void substringOccurance(int arcg, int start, char **argv, int* count, char* buffer){
+  int i,z,j;
+  for(z = 0; buffer[z] != 0; z++){
+    //increment through file
+    for(i = start; i < arcg; i++){
+      //increment though subString
+      for(j = 0; argv[i][j] != 0; j++){
+        //convert to lower case
+        int bufferLetter = toLowerCase(buffer[z+j]);
+        int subStringLetter = toLowerCase(argv[i][j]);
+
+        //if subString not matched
+        if(bufferLetter != subStringLetter){
+          break;
+        }
+        //when reached end of substring increment answer
+        else if(argv[i][j+1] == 0){
+          count[i-start] += 1;
+          break;
+        }
+      }
+    }
+  }
+  return;
+}
+
 // search for substring.  open file by using fopen and fread
-int* level1(int arcg, char **argv, int* count){
+void level1(int arcg, char **argv, int* count){
   char* buffer;
 
   //open file
@@ -46,99 +74,105 @@ int* level1(int arcg, char **argv, int* count){
 
   //check file for each substring if it exists
   //inital variables
-  int i,z,j;
-  for(z = 0; buffer[z] != 0; z++){
-    //increment through file
-    for(i = 2; i < arcg; i++){
-      //increment though subString
-      for(j = 0; argv[i][j] != 0; j++){
-        //convert to lower case
-        int bufferLetter = toLowerCase(buffer[z+j]);
-        int subStringLetter = toLowerCase(argv[i][j]);
+  substringOccurance(arcg, 2, argv, count, buffer);
 
-        //if subString not matched
-        if(bufferLetter != subStringLetter){
-          break;
-        }
-        //when reached end of substring increment answer
-        else if(argv[i][j+1] == 0){
-          count[i-2] += 1;
-          break;
-        }
-      }
-    }
-  }
   fclose(fp);
   free(buffer);
-  return count;
+  return;
 }
 
-int* level2(int arcg, char **argv, int* count){
+// different way of implementing level2
+// int* level2(int arcg, char **argv, int* count){
+//
+//   int fd = open(argv[2],O_RDONLY);
+//   if(fd < 0){
+//     perror("File not opened");
+//     exit(EXIT_FAILURE);
+//   }
+//   char buffer;
+//
+//   int i, j, offset, end;
+//   // check for each substring submitted
+//   for(i = 3; i < arcg; i++){
+//     end = 0;
+//     for(offset = 0; !end; offset++){
+//       // rewind file to beginging with offset
+//       int ret = lseek(fd,offset, SEEK_SET);
+//       if(ret < 0){
+//         perror("Exit Failure");
+//         exit(EXIT_FAILURE);
+//       }
+//
+//       // search for substring
+//       for(j = 0; argv[i][j] != 0; j++){
+//
+//         int gotten = read(fd, &buffer, 1);
+//         // check if file is at end
+//         if(gotten == 0){
+//           end = 1;
+//           break;
+//         }
+//
+//         if(gotten < 0){ // error checking
+//           perror(argv[0]);
+//           exit(EXIT_FAILURE);
+//         }
+//
+//         // logic to see if substring is found
+//         int bufferLetter = toLowerCase(buffer);
+//         int subStringLetter = toLowerCase(argv[i][j]);
+//         if(bufferLetter != subStringLetter){  // substring not found
+//           break;
+//         }
+//         // if at end of substring, increment counter
+//         else if(argv[i][j+1] == 0){
+//           count[i-3] += 1;
+//         }
+//       }
+//     }
+//   }
+//
+//   // close and return
+//   close(fd);
+//   return count;
+// }
 
+void level2(int arcg, char **argv, int* count){
   int fd = open(argv[2],O_RDONLY);
   if(fd < 0){
     perror("File not opened");
     exit(EXIT_FAILURE);
   }
-  char buffer;
+  // find size of file
+  int size = lseek(fd, 0, SEEK_END);
+  // rewind fd
+  lseek(fd,0,SEEK_SET);
 
-  int i, j, offset, end;
-  // check for each substring submitted
-  for(i = 3; i < arcg; i++){
-    end = 0;
-    for(offset = 0; !end; offset++){
-      // rewind file to beginging with offset
-      int ret = lseek(fd,offset, SEEK_SET);
-      if(ret < 0){
-        perror("Exit Failure");
-        exit(EXIT_FAILURE);
-      }
 
-      // search for substring
-      for(j = 0; argv[i][j] != 0; j++){
-
-        int gotten = read(fd, &buffer, 1);
-        // check if file is at end
-        if(gotten == 0){
-          end = 1;
-          break;
-        }
-
-        if(gotten < 0){ // error checking
-          perror(argv[0]);
-          exit(EXIT_FAILURE);
-        }
-
-        // logic to see if substring is found
-        int bufferLetter = toLowerCase(buffer);
-        int subStringLetter = toLowerCase(argv[i][j]);
-        if(bufferLetter != subStringLetter){  // substring not found
-          break;
-        }
-        // if at end of substring, increment counter
-        else if(argv[i][j+1] == 0){
-          count[i-3] += 1;
-        }
-      }
-    }
+  char* buffer = (char*) calloc(size, sizeof(char));
+  int i;
+  char buf;
+  for(i = 0; read(fd, &buf, 1); i++){
+    buffer[i] = buf;
   }
 
-  // close and return
-  close(fd);
-  return count;
-}
+  substringOccurance(arcg, 3, argv, count, buffer);
 
+  close(fd);
+  free(buffer);
+  return;
+}
 
 int main(int arcg, char **argv){
 
   int* count;
   int i;
-  //if flag is enabled
+  //if (any)flag is enabled
   if(argv[1][0] == '-'){
 
     // alloctate memory for array to store values of appearences for substring
     count = (int*)calloc(arcg-3, sizeof(int));
-    count = level2(arcg, argv, count);
+    level2(arcg, argv, count);
     for(i = 0; i < arcg-3; i++){
       printf("%d\n",count[i]);
     }
@@ -149,7 +183,7 @@ int main(int arcg, char **argv){
     // alloctate memory for array to store values of appearences for substring
     count = (int*)calloc(arcg-2, sizeof(int));
     // run search for substring
-    count = level1(arcg, argv, count);
+    level1(arcg, argv, count);
     for(i = 0; i < arcg-2; i++){
       printf("%d\n",count[i]);
     }
